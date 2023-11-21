@@ -7,7 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class GoogleMember {
+public class Google {
 
       @Id
       private String googleId; // 구글 로그인 시 사용되는 ID
