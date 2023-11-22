@@ -1,0 +1,24 @@
+<!-- resources/templates/find-id-form.html -->
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>아이디 찾기</title>
+</head>
+<body>
+<h2>아이디 찾기</h2>
+<!-- 이메일 입력 폼 -->
+<form action="/member/findId" method="post">
+    <input type="hidden" name="findCommon" value="findId">
+    <label for="email">이메일:</label>
+    <input type="email" id="email" name="email" required>
+
+    <button type="submit">아이디 찾기</button>
+</form>
+
+<!-- 아이디 찾기 결과가 있을 때에만 보여줌 -->
+<div th:if="${foundId}">
+    <p>찾은 아이디: <span th:text="${foundId}"></span></p>
+</div>
+</html>

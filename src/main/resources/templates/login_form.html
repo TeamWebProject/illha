@@ -14,18 +14,26 @@
             <label for="password" class="form-label">비밀번호</label>
             <input type="password" name="password" id="password" class="form-control">
         </div>
-        <button type="submit" class="btn btn-primary">로그인</button>
-        <a href="/oauth2/authorization/google">
-            <img src="/google_login_button.png" alt="Google Login">
-        </a>
-
-        <a href="/oauth2/authorization/kakao">
-            <img src="/kakao_login_button.png" alt="Kakao Login">
-        </a>
-
-        <a href="/oauth2/authorization/naver">
-            <img src="/naver_login_button2.png" alt="Naver Login" style="width: 100px; height: 30px;">
-        </a>
+        <div>
+            <button type="submit" class="btn btn-primary" style="display: block; margin-bottom: 10px;">로그인</button>
+            <!-- 아이디 찾기 버튼 -->
+            <a href="/member/findId" class="find-common-button" style="margin-top: 20px;">아이디 찾기</a>
+            <div style="width: 100%; text-align: center; border-bottom: 1px solid #ccc; line-height: 0.1em; margin: 10px 0;">
+                <span style="background-color: #fff; padding: 0 10px; font-size: 14px; color: #333;">또는</span>
+            </div>
+        </div>
+        <div></div>
+        <div style="display: flex; justify-content:center; align-items: center; margin-top: 50px;">
+            <a href="/oauth2/authorization/google">
+                <img src="/pngwing.com.png" alt="Google Login" style="width: 80px; height: 60px; margin-right: 100px;">
+            </a>
+            <a href="/oauth2/authorization/kakao">
+                <img src="/kakao_login_simple1.png" alt="Kakao Login" style="width: 80px; height: 60px; margin-right: 100px;">
+            </a>
+            <a href="/oauth2/authorization/naver">
+                <img src="/naver_login_button3.png" alt="Naver Login" style="width: 80px; height: 60px; margin-right: 50px;">
+            </a>
+        </div>
     </form>
 </div>
 </html>
