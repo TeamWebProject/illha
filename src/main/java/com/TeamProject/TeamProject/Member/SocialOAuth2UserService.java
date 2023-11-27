@@ -84,6 +84,9 @@ public class SocialOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
       System.out.println("Naver User Saved: " + naverId + ", " + email + ", " + nickname + ","+ name);
 
     }
+
+
+
     return oAuth2User;
   }
 }

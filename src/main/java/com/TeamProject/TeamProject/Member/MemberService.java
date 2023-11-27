@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -14,32 +17,72 @@ public class MemberService {
   public final MemberRepository memberRepository;
   public final PasswordEncoder passwordEncoder;
 
-          public Member create(String memberId, String password, String nickname, String email) {
-            Member member = new Member();
-            member.setMemberId(memberId);
-            member.setPassword(passwordEncoder.encode(password));
-            member.setNickname(nickname);
-            member.setEmail(email);
+  public Member create(String memberId, String password, String nickname, String email) {
+    Member member = new Member();
+    member.setMemberId(memberId);
+    member.setPassword(passwordEncoder.encode(password));
+    member.setNickname(nickname);
+    member.setEmail(email);
 
-            this.memberRepository.save(member);
-            return member;
-          }
+    this.memberRepository.save(member);
+    return member;
+  }
 
-          public Member getMember(String memberId) {
-            Optional<Member> member = this.memberRepository.findByMemberId(memberId);
-            if (member.isPresent()) {
-              return member.get();
-            } else {
-              throw new DataNotFoundException("회원이 없습니다.");
-            }
-          }
+  public Member getMember(String memberId) {
+    Optional<Member> member = this.memberRepository.findByMemberId(memberId);
+    if (member.isPresent()) {
+      return member.get();
+    } else {
+      throw new DataNotFoundException("회원이 없습니다.");
+    }
+  }
 
-          public String findIdByEmail(String email) {
-            // email을 기반으로 회원을 찾는 로직
-            Optional<Member> member = memberRepository.findByEmail(email);
-        // 회원이 존재하면 아이디 반환, 없으면 null 또는 예외 처리
-            return member.map(Member::getId)
-                    .map(Object::toString) // (옵션) Long,Interger 타입이면 문자열로 변환
-                    .orElse(null);
-          }
+
+  public List<String> findIdByEmail(String email) {
+    List<Member> members = this.memberRepository.findByEmail(email);
+
+    // 이메일에 해당하는 회원이 없을 경우
+    if (members.isEmpty()) {
+      throw new DataNotFoundException("이메일에 해당하는 회원이 없습니다.");
+    }
+
+    // 중복된 이메일을 가진 모든 회원의 아이디를 반환
+    return members.stream()
+            .map(Member::getMemberId)
+            .collect(Collectors.toList());
+  }
+
+  public String findPasswordByMemberId(String username) {
+    Optional<Member> memberOptional = memberRepository.findByMemberId(username);
+    return memberOptional.map(Member::getPassword).orElse(null);
+  }
+
+  public String generateTemporaryPassword() {
+    // 임시 비밀번호를 랜덤으로 생성 (이 부분을 보안적으로 강화할 수 있음)
+    int length = 10;
+    String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    StringBuilder temporaryPassword = new StringBuilder();
+
+    Random random = new Random();
+    for (int i = 0; i < length; i++) {
+      temporaryPassword.append(characters.charAt(random.nextInt(characters.length())));
+    }
+
+    return temporaryPassword.toString();
+  }
+
+
+  public Member updateTemporayPassword(Member member, String temporaryPassword) {
+    // 임시비밀번호 업데이트
+    member.setPassword(passwordEncoder.encode(temporaryPassword));
+    return memberRepository.save(member);
+  }
+
+  public Member updatePassword(Member member,String newPassword) {
+    // 비밀번호 업데이트 로직을 여기에 구현
+    // 일반적으로는 Member 엔터티의 비밀번호 필드를 업데이트하고 저장하는 로직이 들어갑니다.
+    member.setPassword(passwordEncoder.encode(newPassword)); // 새 비밀번호를 암호화하여 저장
+    memberRepository.save(member); // 업데이트된 회원 정보 저장
+    return memberRepository.save(member);
+  }
 }
