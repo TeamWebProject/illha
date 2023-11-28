@@ -136,17 +136,28 @@ public class MemberController {
                              @RequestParam(name = "verificationCode", defaultValue = "") String verificationCode,
                              HttpSession session) {
 
+
+
+
     try {
       Member member = memberService.getMember(memberId);
       String temporaryPassword = memberService.generateTemporaryPassword();
       memberService.updateTemporayPassword(member, temporaryPassword);
 
+
+      model.addAttribute("memberId", memberId);
+
       // 첫 시도 -> 인증코드 보낸 적 없음
       if (!verificationCodeSent) {
-        String tmp = emailService.sendVerificationCode(member.getEmail(), temporaryPassword);
-        model.addAttribute("verificationCode", tmp);
+        String userEmail = member.getEmail();
+       String tmp = emailService.sendVerificationCode(userEmail, temporaryPassword);
+        model.addAttribute("verificationCode", temporaryPassword);
         model.addAttribute("verificationCodeSent", true);
+        model.addAttribute("userEmail", userEmail); // 이메일 정보를 모델에 추가
         model.addAttribute("message", "임시비밀번호가 이메일로 전송되었습니다.");
+
+        // JavaScript로 확인 메시지를 보여주는 스크립트 추가
+        model.addAttribute("showConfirmationScript", true);
         return "find-password-form";
       }
 
@@ -154,6 +165,8 @@ public class MemberController {
 
       if (matched) {
         model.addAttribute("verificationCodeValid", true);
+        model.addAttribute("userEmail",member.getEmail()); // 여기에 userEmail 추가
+
 
       } else {
         model.addAttribute("message", "임시비밀번호가 틀렸습니다.");
@@ -161,6 +174,8 @@ public class MemberController {
         model.addAttribute("verificationCodeSent", true);
         model.addAttribute("verificationCode", verificationCode);
       }
+
+
 
       return "find-password-form";
 
@@ -177,6 +192,7 @@ public class MemberController {
   private String passwordReset(Model model) {
     model.addAttribute("verificationCode", "");
     model.addAttribute("newPassword", "");
+    model.addAttribute("newPassword1","");
     model.addAttribute("message", ""); // 메시지 초기화
     return "find-password-form";
   }
@@ -184,10 +200,24 @@ public class MemberController {
   @PostMapping("/passwordReset")
   public String passwordReset(@RequestParam("memberId") String memberId,
                               @RequestParam("verificationCode") String verificationCode,
+                              @RequestParam("verificationCodeValid") String verificationCodeValid,
                               @RequestParam("newPassword") String newPassword,
+                              @RequestParam("newPassword1") String newPassword1,
                               Model model) {
     System.out.println(memberId);
     System.out.println(newPassword);
+    System.out.println(newPassword1);
+    System.out.println(verificationCodeValid);
+    if (!newPassword.equals(newPassword1)) {
+      // 비밀번호 확인이 일치하지 않을 때
+      model.addAttribute("verificationCode", verificationCode);
+      model.addAttribute("verificationCodeValid", verificationCodeValid);
+      model.addAttribute("newPassword", newPassword);
+      model.addAttribute("newPassword1", newPassword1);
+      model.addAttribute("memberId", memberId);
+
+      return "find-password-form";
+    }
     try {
       Member member = memberService.getMember(memberId);
       // 여기서 updatePassword 메서드를 호출할 때, 현재 비밀번호를 가진 Member 객체를 전달해야 합니다.
@@ -204,34 +234,6 @@ public class MemberController {
       // 기타 예외 처리
       model.addAttribute("message", "비밀번호 업데이트에 실패했습니다.");
       return "find-password-form";
-
-
-//    try {
-//      // memberId가 누락되었을 때 예외 처리 추가
-//      if (StringUtils.isBlank(memberId)) {
-//        model.addAttribute("message", "아이디를 입력해주세요.");  // 클라이언트에게 메시지 전달
-//        return "find-password-form";
-//      }
-//
-//      Member member = memberService.getMember(memberId);
-//      // 이미 인증번호가 올바르게 입력되었는지 확인
-//      Boolean verificationCodeValid = (Boolean) session.getAttribute("verificationCodeValid");
-//
-//      if (verificationCodeValid) {
-//        // 비밀번호 업데이트
-//        memberService.updatePassword(member, newPassword);
-//        model.addAttribute("newPassword", true); // 비밀번호 재설정 기능인 경우
-//        model.addAttribute("message", "비밀번호가 성공적으로 변경되었습니다.");
-//      } else {
-//        model.addAttribute("message", "인증번호가 올바르지 않습니다.");
-//      }
-//    } catch (DataNotFoundException e) {
-//      model.addAttribute("message", "존재하지 않는 아이디입니다.");
-//    }
-//
-//
-//    // 초기화된 상태의 폼을 보여주기 위해 passwordReset 메서드로 리다이렉트
-//    return "redirect:/member/login";
 
 
     }
