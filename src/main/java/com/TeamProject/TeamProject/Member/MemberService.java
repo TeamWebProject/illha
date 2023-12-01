@@ -1,6 +1,7 @@
 package com.TeamProject.TeamProject.Member;
 
 import com.TeamProject.TeamProject.DataNotFoundException;
+import com.TeamProject.TeamProject.IdorPassword.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class MemberService {
 
   public final MemberRepository memberRepository;
   public final PasswordEncoder passwordEncoder;
+  private final EmailService emailService;
 
   public Member create(String memberId, String password, String nickname, String email) {
     Member member = new Member();
@@ -72,6 +74,7 @@ public class MemberService {
   }
 
 
+
   public Member updateTemporayPassword(Member member, String temporaryPassword) {
     // 임시비밀번호 업데이트
     member.setPassword(passwordEncoder.encode(temporaryPassword));
@@ -85,4 +88,23 @@ public class MemberService {
     memberRepository.save(member); // 업데이트된 회원 정보 저장
     return memberRepository.save(member);
   }
+  // 새로운 메서드 추가: 인증번호 재전송
+  public void resendVerificationCode(String memberId) throws DataNotFoundException {
+    Optional<Member> memberOptional = memberRepository.findByMemberId(memberId);
+
+    if (memberOptional.isPresent()) {
+      Member member = memberOptional.get();
+      String temporaryPassword = generateTemporaryPassword();
+      updateTemporayPassword(member, temporaryPassword);
+
+      // 이메일 전송 로직을 호출
+      String userEmail = member.getEmail();
+      emailService.sendVerificationCode(userEmail, temporaryPassword);
+    } else {
+      throw new DataNotFoundException("존재하지 않는 아이디입니다.");
+    }
+  }
+
+
+
 }

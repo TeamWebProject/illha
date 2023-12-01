@@ -12,10 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @Controller
@@ -25,7 +22,8 @@ public class MemberController {
   @Autowired
   private JavaMailSender javaMailSender;
 
-
+  @Autowired
+  private MemberRepository memberRepository;
   @Autowired
   private EmailService emailService;
 
@@ -59,7 +57,9 @@ public class MemberController {
   }
 
   @GetMapping("/login")
-  private String login() {
+  private String login(Model model, @RequestParam(defaultValue = "false") boolean modal) {
+
+    model.addAttribute("modal", modal);
     return "login_form";
   }
 
@@ -121,7 +121,7 @@ public class MemberController {
 
 
   @GetMapping("/findPassword")
-  public String findPassword(@RequestParam(value = "resetSuccess",required = false)String resetSuccess,
+  public String findPassword(@RequestParam(value = "resetSuccess", required = false) String resetSuccess,
                              Model model) {
 
     model.addAttribute("resetSuccess", resetSuccess);
@@ -134,57 +134,79 @@ public class MemberController {
                              @RequestParam(name = "inputVerificationCode", defaultValue = "") String inputVerificationCode,
                              @RequestParam(name = "verificationCodeSent", defaultValue = "false") boolean verificationCodeSent,
                              @RequestParam(name = "verificationCode", defaultValue = "") String verificationCode,
+                             @RequestParam("modal") boolean modal,
+                             @RequestParam(name = "resendVerificationCode", defaultValue = "false") boolean resendVerificationCode,
                              HttpSession session) {
-
-
 
 
     try {
       Member member = memberService.getMember(memberId);
-      String temporaryPassword = memberService.generateTemporaryPassword();
-      memberService.updateTemporayPassword(member, temporaryPassword);
 
+                  model.addAttribute("memberId", memberId);
+          model.addAttribute("modal", true);
 
-      model.addAttribute("memberId", memberId);
+          // 첫 시도 -> 인증코드 보낸 적 없음
+          if (!verificationCodeSent) {
+            String userEmail = member.getEmail();
+            String temporaryPassword = memberService.generateTemporaryPassword();
+            emailService.sendVerificationCode(userEmail, temporaryPassword);
+            model.addAttribute("verificationCode", temporaryPassword);
+            model.addAttribute("verificationCodeSent", true);
+            model.addAttribute("userEmail", userEmail); // 이메일 정보를 모델에 추가
+            model.addAttribute("message", "임시번호가 이메일로 전송되었습니다.");
 
-      // 첫 시도 -> 인증코드 보낸 적 없음
-      if (!verificationCodeSent) {
-        String userEmail = member.getEmail();
-       String tmp = emailService.sendVerificationCode(userEmail, temporaryPassword);
-        model.addAttribute("verificationCode", temporaryPassword);
-        model.addAttribute("verificationCodeSent", true);
-        model.addAttribute("userEmail", userEmail); // 이메일 정보를 모델에 추가
-        model.addAttribute("message", "임시비밀번호가 이메일로 전송되었습니다.");
-
-        // JavaScript로 확인 메시지를 보여주는 스크립트 추가
-        model.addAttribute("showConfirmationScript", true);
-        return "find-password-form";
-      }
+            // JavaScript로 확인 메시지를 보여주는 스크립트 추가
+                model.addAttribute("showConfirmationScript", true);
+          return "login_form";
+        }
 
       boolean matched = verificationCode.equals(inputVerificationCode);
 
       if (matched) {
         model.addAttribute("verificationCodeValid", true);
-        model.addAttribute("userEmail",member.getEmail()); // 여기에 userEmail 추가
+        model.addAttribute("userEmail", member.getEmail()); // 여기에 userEmail 추가
 
 
       } else {
-        model.addAttribute("message", "임시비밀번호가 틀렸습니다.");
+        model.addAttribute("message", "인증번호가 틀렸습니다.");
         model.addAttribute("verificationCodeValid", false);
         model.addAttribute("verificationCodeSent", true);
         model.addAttribute("verificationCode", verificationCode);
       }
 
 
-
-      return "find-password-form";
+      return "login_form";
 
     } catch (DataNotFoundException e) {
       model.addAttribute("message", "존재하지 않는 아이디입니다.");
+      model.addAttribute("memberId", memberId);
+      model.addAttribute("modal", true);
     }
 
+    return "login_form";
 
-    return "find-password-form";
+
+  }
+
+  @PostMapping("/resendVerificationCode")
+  private String resendVerificationCode(Model model, @RequestParam("memberId") String memberId) {
+
+    Member member = memberService.getMember(memberId);
+    String userEmail = member.getEmail();
+
+    String temporaryPassword = memberService.generateTemporaryPassword();
+    emailService.sendVerificationCode(userEmail, temporaryPassword);
+    model.addAttribute("verificationCode", temporaryPassword);
+    model.addAttribute("verificationCodeSent", true);
+    model.addAttribute("userEmail", userEmail); // 이메일 정보를 모델에 추가
+    model.addAttribute("memberId", memberId); // 이메일 정보를 모델에 추가
+    model.addAttribute("modal", true); // 이메일 정보를 모델에 추가
+
+    model.addAttribute("showConfirmationScript", true);
+    model.addAttribute("message", "인증번호 재전송 성공");
+
+    return "login_form";
+
   }
 
 
@@ -192,7 +214,7 @@ public class MemberController {
   private String passwordReset(Model model) {
     model.addAttribute("verificationCode", "");
     model.addAttribute("newPassword", "");
-    model.addAttribute("newPassword1","");
+    model.addAttribute("newPassword1", "");
     model.addAttribute("message", ""); // 메시지 초기화
     return "find-password-form";
   }
@@ -203,11 +225,13 @@ public class MemberController {
                               @RequestParam("verificationCodeValid") String verificationCodeValid,
                               @RequestParam("newPassword") String newPassword,
                               @RequestParam("newPassword1") String newPassword1,
+                              @RequestParam("modal") boolean modal,
                               Model model) {
     System.out.println(memberId);
     System.out.println(newPassword);
     System.out.println(newPassword1);
     System.out.println(verificationCodeValid);
+
     if (!newPassword.equals(newPassword1)) {
       // 비밀번호 확인이 일치하지 않을 때
       model.addAttribute("verificationCode", verificationCode);
@@ -215,8 +239,8 @@ public class MemberController {
       model.addAttribute("newPassword", newPassword);
       model.addAttribute("newPassword1", newPassword1);
       model.addAttribute("memberId", memberId);
-
-      return "find-password-form";
+      model.addAttribute("modal", modal);
+      return "login_form";
     }
     try {
       Member member = memberService.getMember(memberId);
