@@ -19,13 +19,14 @@ public class MemberService {
   public final PasswordEncoder passwordEncoder;
   private final EmailService emailService;
 
-  public Member create(String memberId, String password, String nickname, String email, String SignUpDate) {
+  public Member create(String memberId, String password, String nickname, String email, String SignUpDate,String phone) {
     Member member = new Member();
     member.setMemberId(memberId);
     member.setPassword(passwordEncoder.encode(password));
     member.setNickname(nickname);
     member.setEmail(email);
     member.setSignUpDate(LocalDateTime.now());
+    member.setPhone(phone);
 
     this.memberRepository.save(member);
     return member;
@@ -60,6 +61,18 @@ public class MemberService {
   public String findPasswordByMemberId(String username) {
     Optional<Member> memberOptional = memberRepository.findByMemberId(username);
     return memberOptional.map(Member::getPassword).orElse(null);
+  }
+
+  public List<Member> findIdByPhone(String phone) {
+    List<Member> members = this.memberRepository.findByPhone(phone);
+
+    // 휴대폰 번호에 해당하는 회원이 없을 경우
+    if (members.isEmpty()) {
+      throw new DataNotFoundException("휴대폰 번호에 해당하는 회원이 없습니다.");
+    }
+
+    // 중복된 휴대폰 번호를 가진 모든 회원의 아이디를 반환
+    return members;
   }
 
   public String generateTemporaryPassword() {
@@ -107,5 +120,6 @@ public class MemberService {
       throw new DataNotFoundException("존재하지 않는 아이디입니다.");
     }
   }
+
 
 }

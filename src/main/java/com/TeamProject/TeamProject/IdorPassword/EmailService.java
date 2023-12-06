@@ -22,4 +22,10 @@ public class EmailService {
     javaMailSender.send(message);
     return verificationCode;
   }
+  public void sendVerificationCodeSMS(String phone, String verificationCodeSMS) {
+    // 이 부분을 변경하여 콘솔에 출력하거나 로깅할 수 있습니다.
+    System.out.println("Verification code for phone number " + phone + ": " + verificationCodeSMS);
+
+    // 이메일 전송 로직은 생략합니다.
+  }
 }

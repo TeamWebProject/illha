@@ -28,4 +28,7 @@ public class Member {
 
     private LocalDateTime signUpDate;
 
+    @Column(unique = true)
+    private String phone;
+
 }

@@ -32,6 +32,7 @@ public class MemberController {
   @Autowired
   private EmailService emailService;
 
+
   @GetMapping("/signup")
   public String signup(MemberCreateForm memberCreateForm) {
     return "signup_form";
@@ -48,7 +49,7 @@ public class MemberController {
       return "redirect:/";
     }
     try {
-      this.memberService.create(memberCreateForm.getMemberId(), memberCreateForm.getPassword1(), memberCreateForm.getNickname(), memberCreateForm.getEmail(), String.valueOf(memberCreateForm.getSignUpDate()));
+      this.memberService.create(memberCreateForm.getMemberId(), memberCreateForm.getPassword1(), memberCreateForm.getNickname(), memberCreateForm.getEmail(), String.valueOf(memberCreateForm.getSignUpDate()),memberCreateForm.getPhone());
     } catch (DataIntegrityViolationException e) {
       e.printStackTrace();
       bindingResult.reject("signupFailed", "이미 등록된 사용자입니다.");
@@ -81,7 +82,9 @@ public class MemberController {
     String userEmail = (String) session.getAttribute("userEmail");
     String storedVerificationCode = (String) session.getAttribute("verificationCode");
 
+
     List<Member> members = memberService.findIdByEmail(userEmail);
+
     model.addAttribute("verificationCodeMismatch", false);
     model.addAttribute("verificationCodeForm", verificationCodeForm);
     model.addAttribute("email", userEmail);
@@ -102,8 +105,10 @@ public class MemberController {
       model.addAttribute("members", members);
     }
 
+
     return "find-id-form";
   }
+
 
 
   @PostMapping("/sendVerificationCode")
@@ -111,6 +116,7 @@ public class MemberController {
 
     // 인증 코드 생성 (여기에서는 간단하게 난수로 생성)
     String verificationCode = String.valueOf((int) (Math.random() * 9000) + 1000);
+
     try {
       List<Member> members = memberService.findIdByEmail(email);
 
@@ -137,6 +143,80 @@ public class MemberController {
     // 이메일 입력 폼으로 리다이렉트
     return "find-id-form";
   }
+  @GetMapping("/findIdPhone")
+  public String findIdPhone() {
+    return "find-id-phone";
+  }
+  @PostMapping ("/findIdPhone")
+  public String findIdPhone(@RequestParam("verificationCodeSMS") String verificationCodeSMS,
+                            @RequestParam(value = "verificationCodeForm", required = false) boolean verificationCodeFormSMS,
+                            Model model,HttpSession session) {
+    // 세션에서 저장된 전화번호 가져오기
+    String userPhone = (String) session.getAttribute("userPhone");
+    String storedVerificationCodeSMS = (String) session.getAttribute("verificationCodeSMS");
+
+
+    List<Member> membersByPhone = memberService.findIdByPhone(userPhone);
+
+
+    model.addAttribute("verificationCodeMismatchSMS", false);
+    model.addAttribute("verificationCodeFormSMS", verificationCodeFormSMS);
+    model.addAttribute("phone", userPhone);
+
+    if(verificationCodeSMS.equals(storedVerificationCodeSMS)){
+      model.addAttribute("membersByPhone",membersByPhone);
+      model.addAttribute("verificationCodeFormSMS",true);
+    }
+
+    if(!verificationCodeSMS.equals(storedVerificationCodeSMS)) {
+      // 인증 코드 불일치 처리 (예: 에러 메시지 전달)
+      model.addAttribute("verificationCodeMismatchSMS", true);
+      return "find-id-phone";
+    }
+
+    // 찾는 아이디 없을 때
+    if(!membersByPhone.isEmpty()) {
+      model.addAttribute("membersByPhone", membersByPhone);
+    }
+
+
+    return "find-id-phone";
+
+
+  }
+  @PostMapping("/sendVerificationCodeSMS")
+  public String sendVerificationCodeSMS(@RequestParam("phone") String phone, Model model, HttpSession session) {
+
+    // 인증 코드 생성 (여기에서는 간단하게 난수로 생성)
+    String verificationCodeSMS = String.valueOf((int) (Math.random() * 9000) + 1000);
+
+    System.out.println(verificationCodeSMS);
+    try {
+      List<Member> members = memberService.findIdByPhone(phone);
+
+
+      emailService.sendVerificationCodeSMS(phone, verificationCodeSMS);
+
+      // 세션에 이메일과 인증 코드 저장
+      session.setAttribute("userPhone", phone);
+      session.setAttribute("verificationCodeSMS", verificationCodeSMS);
+
+      // 모델에 인증 코드 저장 (후에 확인을 위해)
+      model.addAttribute("verificationCodeSMS", verificationCodeSMS);
+      model.addAttribute("phone", phone);
+      model.addAttribute("members", members);
+      // 인증 코드 입력 폼을 보여주기 위해 "verificationCodeForm" 속성 추가
+      model.addAttribute("verificationCodeFormSMS", true);
+
+
+    } catch (DataNotFoundException e) {
+      model.addAttribute("notFound1", true);
+      model.addAttribute("errorMessage1", "휴대전화번호에 일치하는 아이디가 없습니다.");
+    }
+    // 휴대전화 입력 폼으로 리다이렉트
+    return "find-id-phone";
+  }
+
 
 
   @GetMapping("/findPassword")

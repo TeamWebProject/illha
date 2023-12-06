@@ -11,7 +11,7 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
 
 
     List<Member> findByEmail(String email);
-
+    List<Member> findByPhone(String phone);
     Optional<Member> findBySignUpDate(LocalDateTime signUpDate);
 }
 
