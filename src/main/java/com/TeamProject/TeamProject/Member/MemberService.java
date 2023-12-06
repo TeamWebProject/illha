@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -19,12 +19,13 @@ public class MemberService {
   public final PasswordEncoder passwordEncoder;
   private final EmailService emailService;
 
-  public Member create(String memberId, String password, String nickname, String email) {
+  public Member create(String memberId, String password, String nickname, String email, String SignUpDate) {
     Member member = new Member();
     member.setMemberId(memberId);
     member.setPassword(passwordEncoder.encode(password));
     member.setNickname(nickname);
     member.setEmail(email);
+    member.setSignUpDate(LocalDateTime.now());
 
     this.memberRepository.save(member);
     return member;
@@ -40,7 +41,7 @@ public class MemberService {
   }
 
 
-  public List<String> findIdByEmail(String email) {
+  public List<Member> findIdByEmail(String email) {
     List<Member> members = this.memberRepository.findByEmail(email);
 
     // 이메일에 해당하는 회원이 없을 경우
@@ -49,9 +50,11 @@ public class MemberService {
     }
 
     // 중복된 이메일을 가진 모든 회원의 아이디를 반환
-    return members.stream()
-            .map(Member::getMemberId)
-            .collect(Collectors.toList());
+    return members;
+  }
+  // 추가: 가입일시로 회원 찾기
+  public Optional<Member> findBySignUpDate(LocalDateTime signUpDate) {
+    return memberRepository.findBySignUpDate(signUpDate);
   }
 
   public String findPasswordByMemberId(String username) {
@@ -104,7 +107,5 @@ public class MemberService {
       throw new DataNotFoundException("존재하지 않는 아이디입니다.");
     }
   }
-
-
 
 }

@@ -11,7 +11,6 @@ import lombok.Setter;
 public class Naver {
     @Id
     private String naverId;
-
     private String email;
     private String nickname;
     private String name;
