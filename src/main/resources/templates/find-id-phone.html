@@ -36,7 +36,10 @@
         <a class="navbar-brand" href="/">맛집리스트</a>
     </div>
 </nav>
-<div class="container-max-width" style="margin-left: auto;margin-right: auto;border-left: solid;border-right: solid;width: 70%;height: 863px; background: white;">
+</body>
+</body>
+<section style="width: 1669px;">
+<div class="container-max-width" style="margin-left: auto;margin-right: auto;border-left: solid;border-right: solid;width: 50%;height: 863px; background: white; position:relative; left:8%;">
     <h2>아이디 찾기</h2>
     <!-- 이메일 입력 폼 -->
     <form th:action="@{/member/sendVerificationCodeSMS}" class="mt-5 text-center" method="post">
@@ -44,7 +47,7 @@
         <div class="d-flex justify-content-center">
             <div class="form-group">
                 <div>
-                    <label for="phone" class="mr-2" style="display:block; margin-right:200px;">휴대전화번호로 찾기</label>
+                    <label for="phone" class="mr-2" style="display:block; margin-right:140px;font-weight: bold;">휴대전화번호로 찾기</label>
                 </div>
                 <input type="text" id="phone" name="phone" class="form-control"
                        style="width: 200px; display:inline-block; border-radius: 0px;"
@@ -108,6 +111,7 @@
         </div>
     </div>
 </div>
+</section>
 
 
 

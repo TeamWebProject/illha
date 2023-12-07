@@ -3,6 +3,7 @@ package com.TeamProject.TeamProject.Member;
 
 import com.TeamProject.TeamProject.DataNotFoundException;
 import com.TeamProject.TeamProject.IdorPassword.EmailService;
+import com.TeamProject.TeamProject.SNS.SMSService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,8 @@ public class MemberController {
   private MemberRepository memberRepository;
   @Autowired
   private EmailService emailService;
+  @Autowired
+  private SMSService smsService;
 
 
   @GetMapping("/signup")
@@ -68,6 +71,14 @@ public class MemberController {
     model.addAttribute("modal", modal);
     return "login_form";
   }
+
+  @GetMapping("/findIdTaTal")
+    private String findIdTaTal(){
+
+    return "find-id-total";
+  }
+
+
 
   @GetMapping("/findId")
   public String findId() {
@@ -156,7 +167,7 @@ public class MemberController {
     String storedVerificationCodeSMS = (String) session.getAttribute("verificationCodeSMS");
 
 
-    List<Member> membersByPhone = memberService.findIdByPhone(userPhone);
+    List<Member> members = memberService.findIdByPhone(userPhone);
 
 
     model.addAttribute("verificationCodeMismatchSMS", false);
@@ -164,7 +175,7 @@ public class MemberController {
     model.addAttribute("phone", userPhone);
 
     if(verificationCodeSMS.equals(storedVerificationCodeSMS)){
-      model.addAttribute("membersByPhone",membersByPhone);
+      model.addAttribute("members",members);
       model.addAttribute("verificationCodeFormSMS",true);
     }
 
@@ -175,8 +186,8 @@ public class MemberController {
     }
 
     // 찾는 아이디 없을 때
-    if(!membersByPhone.isEmpty()) {
-      model.addAttribute("membersByPhone", membersByPhone);
+    if(!members.isEmpty()) {
+      model.addAttribute("members", members);
     }
 
 
@@ -195,7 +206,7 @@ public class MemberController {
       List<Member> members = memberService.findIdByPhone(phone);
 
 
-      emailService.sendVerificationCodeSMS(phone, verificationCodeSMS);
+      smsService.sendMessage(phone,verificationCodeSMS);
 
       // 세션에 이메일과 인증 코드 저장
       session.setAttribute("userPhone", phone);

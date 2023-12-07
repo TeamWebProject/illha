@@ -1,10 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>아이디찾기총합</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/bootstrap.min.css}">
+    <style>
+        h2 {
+            text-align: center;
+            font-size: 20px;
+        }
+
+        body {
+            padding: 20px;
+        }
+        .reset-btn{
+           background:white;
+           color:black;
+           border:solid 2px black;
+        }
+        .reset-btn:hover{
+             background-color: black;
+            color: white;
+        }
+        .btn-group a {
+            text-decoration: none; /* 밑줄 제거 */
+            color: black; /* 텍스트 색상을 검은색으로 설정 */
+            font-weight: bold; /* 굵게 스타일 적용 */
+            font-size:20px;
+             margin-left: 10px;
+        }
+        .form-check {
+            display: flex;
+            align-items: center;
+
+
+         }
+
+
+/* 간격을 조절하기 위해 body에 패딩을 추가합니다. */
+    </style>
 </head>
 <body>
-$END$
+<body class="m-0 p-0" style="background:beige;">
+<!-- 네비게이션 바 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid p-0">
+        <a class="navbar-brand" href="/">맛집리스트</a>
+    </div>
+</nav>
+<section style="width: 1669px;">
+    <div class="container my-0 mx-auto"
+         style="margin-left: auto;margin-right: auto;border-left: solid;border-right: solid;width: 50%;height: 863px; background: white; position:relative; left:8%;">
+        <h2>아이디 찾기</h2>
+        <div class="d-flex justify-content-center" style="padding:2%; font-weight: bold; color:blue;">아이디 찾는 방법을 선택해
+            주세요.
+        </div>
+        <div class="d-flex justify-content-center" style="padding:10%;">
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1"
+                           onclick="redirectToFindId()" style="width: 20px; height: 20px;margin-top: 1px;">
+                    <div class="btn-group" role="group" aria-label="Basic outlined example">
+                        <a href="/member/findId" onclick="selectRadioButton()">이메일로 찾기</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="width: 100%; text-align: center; border-bottom: 1px solid #ccc; line-height: 0.1em; margin: 10px 0;">
+        </div>
+        <div class="d-flex justify-content-center">
+            <div class="form-group">
+                <div class="form-check">
+                    <div style="padding:80px;">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2"
+                               onclick="redirectToFindIdPhone()" style="width: 20px; height: 20px;margin-top: 5px;">
+                        <div class="btn-group" role="group" aria-label="Basic outlined example">
+                            <a href="/member/findIdPhone" onclick="selectRadioButtonPhone()">휴대전화번호로 찾기</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</section>
+
+<script>
+    function redirectToFindId() {
+        // 라디오 버튼이 선택되면 이메일로 찾기 URI로 이동
+        window.location.href = "/member/findId";
+    }
+    function redirectToFindIdPhone() {
+        // 라디오 버튼이 선택되면 이메일로 찾기 URI로 이동
+        window.location.href = "/member/findIdPhone";
+    }
+      // a태그 클릭시 라디오 버튼 선택 상태로 변경
+    function selectRadioButton() {
+        document.getElementById("flexRadioDefault1").checked = true;
+    }
+    function selectRadioButtonPhone() {
+        document.getElementById("flexRadioDefault2").checked = true;
+    }
+</script>
 </body>
 </html>
