@@ -98,7 +98,7 @@ public class MemberService {
   }
 
   public Member updatePassword(Member member,String newPassword) {
-    // 비밀번호 업데이트 로직을 여기에 구현
+    // 비밀번호 재설정 업데이트 로직을 여기에 구현
     // 일반적으로는 Member 엔터티의 비밀번호 필드를 업데이트하고 저장하는 로직이 들어갑니다.
     member.setPassword(passwordEncoder.encode(newPassword)); // 새 비밀번호를 암호화하여 저장
     memberRepository.save(member); // 업데이트된 회원 정보 저장
