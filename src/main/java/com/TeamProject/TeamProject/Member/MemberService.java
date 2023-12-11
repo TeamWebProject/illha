@@ -1,6 +1,7 @@
 package com.TeamProject.TeamProject.Member;
 
 import com.TeamProject.TeamProject.DataNotFoundException;
+import com.TeamProject.TeamProject.DuplicateMemberIdException;
 import com.TeamProject.TeamProject.IdorPassword.EmailService;
 import com.TeamProject.TeamProject.SNS.SMSService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,13 @@ public class MemberService {
   private final EmailService emailService;
   private final SMSService smsService;
 
-  public Member create(String memberId, String password, String nickname, String email, String SignUpDate,String phone) {
+  public Member create(String memberId, String password, String nickname, String email, String SignUpDate, String phone) {
+
+    Optional<Member> findResult = this.memberRepository.findByMemberId(memberId);
+    if(findResult.isPresent()) {
+      throw new DuplicateMemberIdException(" 이미 존재하는 아이디입니다.");
+    }
+
     Member member = new Member();
     member.setMemberId(memberId);
     member.setPassword(passwordEncoder.encode(password));
@@ -92,8 +99,6 @@ public class MemberService {
     return temporaryPassword.toString();
   }
 
-
-
   public Member updateTemporayPassword(Member member, String temporaryPassword) {
     // 임시인증번호 업데이트
     member.setPassword(passwordEncoder.encode(temporaryPassword));
@@ -154,5 +159,51 @@ public class MemberService {
 
 
 
+  public FindIdParam getDefaultParam() {
+    FindIdParam findIdParam = new FindIdParam();
+
+    findIdParam.setVerificationCode(null);
+    findIdParam.setVerificationCodeForm(false);
+    findIdParam.setVerificationCodeMismatch(null);
+    findIdParam.setSendAlert(false);
+    findIdParam.setMembers(null);
+
+    return findIdParam;
+  }
+
+  public FindIdParam getParamForSendVerification(String storedVerificationCode, String email) {
+
+    FindIdParam findIdParam = getDefaultParam();
+
+    findIdParam.setEmail(email);
+    findIdParam.setVerificationCode(storedVerificationCode);
+    findIdParam.setVerificationCodeForm(true);
+    findIdParam.setSendAlert(true);
+
+    return findIdParam;
+  }
+
+  public FindIdParam getParamForFindId(String storedVerificationCode, String inputVerification, String email) {
+
+    List<Member> members = findIdByEmail(email);
+
+    FindIdParam findIdParam = getParamForSendVerification(storedVerificationCode, email);
+
+    findIdParam.setSendAlert(false);
+    findIdParam.setVerificationCodeMismatch(false);
+    findIdParam.setMembers(members);
+
+    if(!storedVerificationCode.equals(inputVerification)) {
+      findIdParam.setVerificationCodeMismatch(true);
+      findIdParam.setErrorMessage("인증번호가 불일치합니다..");
+    }
+
+    if(members.isEmpty()) {
+      findIdParam.setErrorMessage("이메일에 해당하는 회원이 없습니다.");
+      findIdParam.setMembers(null);
+    }
+
+    return findIdParam;
+  }
 
 }

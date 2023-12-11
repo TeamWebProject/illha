@@ -2,13 +2,13 @@ package com.TeamProject.TeamProject.Member;
 
 
 import com.TeamProject.TeamProject.DataNotFoundException;
+import com.TeamProject.TeamProject.DuplicateMemberIdException;
 import com.TeamProject.TeamProject.IdorPassword.EmailService;
 import com.TeamProject.TeamProject.SNS.SMSService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,6 +35,8 @@ public class MemberController {
   @Autowired
   private SMSService smsService;
 
+  private FindIdParam findIdParam;
+
 
   @GetMapping("/signup")
   public String signup(MemberCreateForm memberCreateForm) {
@@ -43,37 +45,27 @@ public class MemberController {
 
   @PostMapping("/signup")
   public String signup(@Valid MemberCreateForm memberCreateForm, BindingResult bindingResult) {
+
+    String errorReturnPage = "signup_form";
+
     if (bindingResult.hasErrors()) {
-      return "signup_form";
+      return errorReturnPage;
     }
+
     if (!memberCreateForm.getPassword1().equals(memberCreateForm.getPassword2())) {
       bindingResult.rejectValue("password2", "passwordInCorrect", "2개의 패스워드가 일치하지 않습니다.");
-
-      return "redirect:/";
+      return errorReturnPage;
     }
+
     try {
       this.memberService.create(memberCreateForm.getMemberId(), memberCreateForm.getPassword1(), memberCreateForm.getNickname(), memberCreateForm.getEmail(), String.valueOf(memberCreateForm.getSignUpDate()), memberCreateForm.getPhone());
-
-    } catch (DataIntegrityViolationException e) {
-      e.printStackTrace();
-      bindingResult.reject("signupFailed", "이미 등록된 사용자입니다.");
-      return "signup_form";
-    } catch (Exception e) {
-      e.printStackTrace();
-      bindingResult.reject("signupFailed", e.getMessage());
-      return "signup_form";
+    } catch (DuplicateMemberIdException e) {
+      bindingResult.reject("duplicateMemberId", "이미 존재하는 아이디입니다.");
+      return errorReturnPage;
     }
 
     return "redirect:/";
   }
-  @PostMapping("/signPhone")
-  public String signPhone(@RequestParam("phone") String phone){
-    String verificationCode = emailService.sendVerificationCodeSMS(phone);
-    return "redirect:/signup_form";
-  }
-
-
-
 
   @GetMapping("/login")
   private String login(Model model, @RequestParam(defaultValue = "false") boolean modal) {
@@ -90,75 +82,41 @@ public class MemberController {
 
 
   @GetMapping("/findId")
-  public String findId() {
+  public String findId(Model model) {
+    FindIdParam findIdParam1 = memberService.getDefaultParam();
+    //MemberService.FindIdParam findIdParam = memberService.getDefaultParam();
+    model.addAttribute("paramForFindId", findIdParam1);
+
     return "find-id-form";
   }
 
   @PostMapping("/findId")
-  public String findId(@RequestParam("verificationCode") String verificationCode, HttpSession session,
-                       @RequestParam(value = "verificationCodeForm", required = false) boolean verificationCodeForm,
+  public String findId(@RequestParam("email") String email, @RequestParam("inputVerificationCode") String inputVerificationCode, HttpSession session,
                        Model model) {
+
     // 세션에서 저장된 이메일 가져오기
     String userEmail = (String) session.getAttribute("userEmail");
-    String storedVerificationCode = (String) session.getAttribute("verificationCode");
-
-
-    List<Member> members = memberService.findIdByEmail(userEmail);
-
-    model.addAttribute("verificationCodeMismatch", false);
-    model.addAttribute("verificationCodeForm", verificationCodeForm);
-    model.addAttribute("email", userEmail);
-
-    if (verificationCode.equals(storedVerificationCode)) {
-      model.addAttribute("members", members);
-      model.addAttribute("verificationCodeForm", false);
-    }
-
-    if (!verificationCode.equals(storedVerificationCode)) {
-      // 인증 코드 불일치 처리 (예: 에러 메시지 전달)
-      model.addAttribute("verificationCodeMismatch", true);
-      return "find-id-form";
-    }
-
-    // 찾는 아이디 없을 때
-    if (!members.isEmpty()) {
-      model.addAttribute("members", members);
-    }
-
+    String storedVerificationCode = (String) session.getAttribute("storedVerificationCode");
+    //MemberService.FindIdParam findIdParam = memberService.getParamForFindId(storedVerificationCode, inputVerificationCode, userEmail);
+    FindIdParam findIdParam1 = memberService.getParamForFindId(storedVerificationCode,inputVerificationCode,userEmail);
+    model.addAttribute("paramForFindId", findIdParam1);
 
     return "find-id-form";
   }
 
-
   @PostMapping("/sendVerificationCode")
-  public String sendVerificationCode(@RequestParam("email") String email, Model model, HttpSession session) {
+  public String sendVerificationCode(@RequestParam("email") String email, @RequestParam(value = "inputVerificationCode", required = false) String inputVerificationCode, Model model, HttpSession session) {
 
-    // 인증 코드 생성 (여기에서는 간단하게 난수로 생성)
-    String verificationCode = String.valueOf((int) (Math.random() * 9000) + 1000);
+    String storedVerificationCode = String.valueOf((int) (Math.random() * 9000) + 1000);
 
-    try {
-      List<Member> members = memberService.findIdByEmail(email);
+    emailService.sendVerificationCode(email, storedVerificationCode);
+    session.setAttribute("userEmail", email);
+    session.setAttribute("storedVerificationCode", storedVerificationCode);
 
-      // 이메일로 인증 코드 전송
-      emailService.sendVerificationCode(email, verificationCode);
+    FindIdParam findIdParam1 = memberService.getParamForSendVerification(storedVerificationCode,email);
+   // MemberService.FindIdParam findIdParam = memberService.getParamForSendVerification(storedVerificationCode, email);
+    model.addAttribute("paramForFindId", findIdParam1);
 
-      // 세션에 이메일과 인증 코드 저장
-      session.setAttribute("userEmail", email);
-      session.setAttribute("verificationCode", verificationCode);
-
-      // 모델에 인증 코드 저장 (후에 확인을 위해)
-      model.addAttribute("verificationCode", verificationCode);
-      model.addAttribute("email", email);
-      model.addAttribute("members", members);
-      // 인증 코드 입력 폼을 보여주기 위해 "verificationCodeForm" 속성 추가
-      model.addAttribute("verificationCodeForm", true);
-
-      // JavaScript로 확인 메시지를 보여주는 스크립트 추가
-      model.addAttribute("showConfirmationScript", true);
-    } catch (DataNotFoundException e) {
-      model.addAttribute("notFound", true);
-      model.addAttribute("errorMessage", "이메일에 해당하는 회원이 없습니다.");
-    }
     // 이메일 입력 폼으로 리다이렉트
     return "find-id-form";
   }
@@ -304,6 +262,7 @@ public class MemberController {
 
 
   }
+
   @PostMapping("/resendVerificationCode")//이메일로 찾기 인증번호 재전송메서드
   private String resendVerificationCode(Model model, @RequestParam("memberId") String memberId) {
 
@@ -424,6 +383,7 @@ public class MemberController {
     }
     return "find-password-phone";
   }
+
   @PostMapping("/resendVerificationCodePhone")//폰인증번호 재전송 메서드
   private String resendVerificationCodePhone(Model model, @RequestParam("memberId") String memberId) {
 

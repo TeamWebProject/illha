@@ -14,6 +14,7 @@ public class EmailService {
 
 
   public String sendVerificationCode(String toEmail, String verificationCode) {
+
     System.out.println("Verification code: " + verificationCode); // 로그로 출력
     SimpleMailMessage message = new SimpleMailMessage();
     message.setTo(toEmail);
