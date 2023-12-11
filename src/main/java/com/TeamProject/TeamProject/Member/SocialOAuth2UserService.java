@@ -15,17 +15,12 @@ import java.util.Map;
 public class SocialOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 // 이클래스는 무조건 OAuth2로그인방식으로 써야하므로 제일 중요한 클래스라고해도 과언이아닙니다.
   // 이곳에 구글,카카오,네이버 모든 서비스정보를 끌어와서 생성자를통해 의존성을 추가해주었습니다.
-          private final GoogleService googleService;
-          private final KakaoService kakaoService;
-          private final NaverService naverMemberService;
+          private final UserService userService;
 
 
           @Autowired
-          public SocialOAuth2UserService(GoogleService googleService, KakaoService kakaoService
-                  , NaverService naverMemberService) {
-            this.googleService = googleService;
-            this.kakaoService = kakaoService;
-            this.naverMemberService = naverMemberService;
+          public SocialOAuth2UserService(UserService userService) {
+            this.userService =  userService;
             //위에서말씀드린 그대로구요.
           }
 
@@ -37,6 +32,8 @@ public class SocialOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
           public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
             System.out.println("asdasd");// 제가 이 메서드가 실행되는지 출력문을통해서 확인한거기에 이출력문은 생략하셔도됩니다//
             OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
+
+
 
             String clientId = userRequest.getClientRegistration().getClientId();
             String clientName = userRequest.getClientRegistration().getClientName();
@@ -65,7 +62,7 @@ public class SocialOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
               String nickname = oAuth2User.getAttribute("name");
 
               // Save or update Google information in the database
-              googleService.saveOrUpdateGoogle(googleId, email, nickname);
+              userService.saveOrUpdateGoogle(googleId, email, nickname);
               System.out.println("Google User Saved: " + googleId + ", " + email + ", " + nickname);
 
             } else if (clientName.equals("kakao")) {
@@ -79,7 +76,7 @@ public class SocialOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
               String nickname = (String) attributes.get("nickname");
 
               // Save or update Kakao information in the database
-              kakaoService.saveOrUpdateKakao(String.valueOf(kakaoId), email, nickname);
+              userService.saveOrUpdateKakao(String.valueOf(kakaoId), email, nickname);
               // Save or update Kakao information in the database
               System.out.println("Kakao User Saved: " + kakaoId + ", " + email + ", " + nickname);
 
@@ -93,7 +90,7 @@ public class SocialOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
               String name = (String)attributes.get("name");
 
               // Save or update Naver information in the database
-              naverMemberService.saveOrUpdateNaver(String.valueOf(naverId), email, nickname,name);
+              userService.saveOrUpdateNaver(String.valueOf(naverId), email, nickname,name);
               System.out.println("Naver User Saved: " + naverId + ", " + email + ", " + nickname + ","+ name);
 
             }

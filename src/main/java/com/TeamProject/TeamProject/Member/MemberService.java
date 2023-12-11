@@ -2,9 +2,11 @@ package com.TeamProject.TeamProject.Member;
 
 import com.TeamProject.TeamProject.DataNotFoundException;
 import com.TeamProject.TeamProject.IdorPassword.EmailService;
+import com.TeamProject.TeamProject.SNS.SMSService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +20,7 @@ public class MemberService {
   public final MemberRepository memberRepository;
   public final PasswordEncoder passwordEncoder;
   private final EmailService emailService;
+  private final SMSService smsService;
 
   public Member create(String memberId, String password, String nickname, String email, String SignUpDate,String phone) {
     Member member = new Member();
@@ -92,7 +95,7 @@ public class MemberService {
 
 
   public Member updateTemporayPassword(Member member, String temporaryPassword) {
-    // 임시비밀번호 업데이트
+    // 임시인증번호 업데이트
     member.setPassword(passwordEncoder.encode(temporaryPassword));
     return memberRepository.save(member);
   }
@@ -120,6 +123,36 @@ public class MemberService {
       throw new DataNotFoundException("존재하지 않는 아이디입니다.");
     }
   }
+
+  //비밀번호(findPassword) 찾기 첫시도 메서드
+  public void sendTemporaryPassword(Member member, Model model) {
+    String userEmail = member.getEmail();
+    String temporaryPassword = generateTemporaryPassword();
+    emailService.sendVerificationCode(userEmail, temporaryPassword);
+
+    // 모델에 속성 추가
+    model.addAttribute("verificationCode", temporaryPassword);
+    model.addAttribute("verificationCodeSent", true);
+    model.addAttribute("userEmail", userEmail);
+    model.addAttribute("message", "임시번호가 이메일로 전송되었습니다.");
+    model.addAttribute("showConfirmationScript", true);
+  }
+  public void sendTemporaryPasswordPhone(Member member, Model model){
+    String userPhone = member.getPhone();
+    // 인증 코드 생성 (여기에서는 간단하게 난수로 생성)
+    String verificationCodeSMS = String.valueOf((int) (Math.random() * 9000) + 1000);
+
+    smsService.sendMessage(userPhone, verificationCodeSMS);//sms서비스에서 인증번호 보내는 로직 가져와서 사용했습니다.
+    model.addAttribute("verificationCodePhone", verificationCodeSMS);//임시비밀번호!!
+    model.addAttribute("verificationCodeSentPhone", true);//임시비밀번호 첫번째폼
+    model.addAttribute("userPhone", userPhone); // 폰 정보를 모델에 추가
+    model.addAttribute("message", "임시번호가 휴대전화번호로 전송되었습니다.");
+    // JavaScript로 확인 메시지를 보여주는 스크립트 추가
+    model.addAttribute("showConfirmationScript", true);
+
+  }
+
+
 
 
 }

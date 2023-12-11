@@ -53,6 +53,7 @@ public class MemberController {
     }
     try {
       this.memberService.create(memberCreateForm.getMemberId(), memberCreateForm.getPassword1(), memberCreateForm.getNickname(), memberCreateForm.getEmail(), String.valueOf(memberCreateForm.getSignUpDate()), memberCreateForm.getPhone());
+
     } catch (DataIntegrityViolationException e) {
       e.printStackTrace();
       bindingResult.reject("signupFailed", "이미 등록된 사용자입니다.");
@@ -62,8 +63,17 @@ public class MemberController {
       bindingResult.reject("signupFailed", e.getMessage());
       return "signup_form";
     }
+
     return "redirect:/";
   }
+  @PostMapping("/signPhone")
+  public String signPhone(@RequestParam("phone") String phone){
+    String verificationCode = emailService.sendVerificationCodeSMS(phone);
+    return "redirect:/signup_form";
+  }
+
+
+
 
   @GetMapping("/login")
   private String login(Model model, @RequestParam(defaultValue = "false") boolean modal) {
@@ -230,10 +240,10 @@ public class MemberController {
   }
 
   //토탈로 묵어서 이부분은 모달로 자유롭게사용하셔도 무방합니다.
-  @GetMapping("/findPasswordTaTal")
+  @GetMapping("/findPasswordToTal")
   private String findPasswordTaTal() {
 
-    return "find-password-tatal";
+    return "find-password-total";
   }
 
   // 폰으로 패스워드 찾기 메서드 시작입니다.총 3가지 메서드
@@ -250,10 +260,7 @@ public class MemberController {
   public String findPassword(@RequestParam("memberId") String memberId, Model model,
                              @RequestParam(name = "inputVerificationCode", defaultValue = "") String inputVerificationCode,
                              @RequestParam(name = "verificationCodeSent", defaultValue = "false") boolean verificationCodeSent,
-                             @RequestParam(name = "verificationCode", defaultValue = "") String verificationCode,
-                             HttpSession session) {
-
-
+                             @RequestParam(name = "verificationCode", defaultValue = "") String verificationCode) {
     try {
       Member member = memberService.getMember(memberId);
 
@@ -281,18 +288,13 @@ public class MemberController {
       if (matched) {
         model.addAttribute("verificationCodeValid", true);
         model.addAttribute("userEmail", member.getEmail()); // 여기에 userEmail 추가
-
-
       } else {
         model.addAttribute("message", "인증번호가 틀렸습니다.");
         model.addAttribute("verificationCodeValid", false);
         model.addAttribute("verificationCodeSent", true);
         model.addAttribute("verificationCode", verificationCode);
       }
-
-
       return "find-password-form";
-
     } catch (DataNotFoundException e) {
       model.addAttribute("message", "존재하지 않는 아이디입니다.");
       model.addAttribute("memberId", memberId);
@@ -302,7 +304,6 @@ public class MemberController {
 
 
   }
-
   @PostMapping("/resendVerificationCode")//이메일로 찾기 인증번호 재전송메서드
   private String resendVerificationCode(Model model, @RequestParam("memberId") String memberId) {
 
@@ -383,8 +384,7 @@ public class MemberController {
   public String findPasswordPhone(@RequestParam("memberId") String memberId, Model model,
                                   @RequestParam(name = "inputVerificationCodePhone", defaultValue = "") String inputVerificationCodePhone,
                                   @RequestParam(name = "verificationCodeSentPhone", defaultValue = "false") boolean verificationCodeSentPhone,
-                                  @RequestParam(name = "verificationCodePhone", defaultValue = "") String verificationCodePhone,
-                                  HttpSession session) {
+                                  @RequestParam(name = "verificationCodePhone", defaultValue = "") String verificationCodePhone) {
     try {
       Member member = memberService.getMember(memberId);// 멤버서비스에서 아이디 정보가져오기
 
