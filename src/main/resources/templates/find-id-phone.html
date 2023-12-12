@@ -36,43 +36,44 @@
         <a class="navbar-brand" href="/">맛집리스트</a>
     </div>
 </nav>
+</body>
+</body>
 <section style="width: 1669px;">
     <div class="container-max-width"
-         style="margin-left: auto;margin-right: auto;border-left: solid;border-right: solid;width: 50%;height: 863px; background: white;  position:relative; left:8%;">
+         style="margin-left: auto;margin-right: auto;border-left: solid;border-right: solid;width: 50%;height: 863px; background: white; position:relative; left:8%;">
         <h2>아이디 찾기</h2>
-        <!-- 이메일 입력 폼 -->
-        <form th:action="@{/member/sendVerificationCode}" class="mt-5 text-center" method="post">
+        <!-- 휴대전화번호 입력 폼 -->
+        <form th:action="@{/member/sendVerificationCodeSMS}" class="mt-5 text-center" method="post">
             <input type="hidden" name="findCommon" value="findId">
-            <div th:if="${paramForFindId}">
+            <div th:if="${paramForFindIdPhone}">
                 <!--                <input type="hidden" name="verificationCodeMismatch"-->
                 <!--                       th:value="${paramForFindId.verificationCodeMismatch}">-->
                 <!--                <input type="hidden" name="inputVerificationCode" th:value="${paramForFindId.verificationCode}">-->
-                <input type="hidden" name="verificationCodeForm" th:value="${paramForFindId.verificationCodeForm}">
+                <input type="hidden" name="verificationCodeForm" th:value="${paramForFindIdPhone.verificationCodeForm}">
             </div>
             <div class="d-flex justify-content-center">
                 <div class="form-group">
                     <div>
-                        <label for="email" class="mr-2" style="display:block; margin-right:184px; font-weight: bold;">이메일로
+                        <label for="phone" class="mr-2" style="display:block; margin-right:140px;font-weight: bold;">휴대전화번호로
                             찾기</label>
                     </div>
-                    <input type="email" id="email" name="email" class="form-control"
+                    <input type="text" id="phone" name="phone" class="form-control"
                            style="width: 200px; display:inline-block; border-radius: 0px;"
-                           required th:value="${paramForFindId.email}">
-
+                           required th:value="${paramForFindIdPhone.phone}">
                     <div class="btn-group" role="group" aria-label="Basic outlined example">
                         <button type="submit" id="verificationCodeButton" class="reset-btn"
-                                formaction="/member/sendVerificationCode">인증요청
+                                formaction="/member/sendVerificationCodeSMS">인증요청
                         </button>
                     </div>
                 </div>
             </div>
         </form>
-        <div th:if="${paramForFindId}">
+        <div th:if="${paramForFindIdPhone}">
             <!-- 인증 코드 입력 폼 -->
-            <form th:action="@{/member/findId}" method="post" class="mt-5 text-center"
-                  th:if="${paramForFindId.verificationCodeForm}">
-                <input type="hidden" name="verificationCodeForm" th:value="${paramForFindId.verificationCodeForm}">
-                <input type="hidden" name="email" th:value="${paramForFindId.email}">
+            <form th:action="@{/member/findIdPhone}" method="post" class="mt-5 text-center"
+                  th:if="${paramForFindIdPhone.verificationCodeForm}">
+                <input type="hidden" name="verificationCodeForm" th:value="${paramForFindIdPhone.verificationCodeForm}">
+                <input type="hidden" name="phone" th:value="${paramForFindIdPhone.phone}">
                 <div class="d-flex justify-content-center">
                     <div class="form-group">
                         <label for="verificationCode" class="mr-2">인증 코드:</label>
@@ -84,10 +85,9 @@
                 </div>
             </form>
             <!-- 아이디 찾기 결과가 있을 때에만 보여줌 -->
-            <div th:if="${paramForFindId.verificationCodeMismatch != null}">
-                <div th:if="${paramForFindId.members != null and paramForFindId.verificationCodeMismatch != true}"
-                     class="mt-3"
-                     style="margin-left: 30%; margin-right: 30%; width:60%;position: relative; right: 10%;">
+            <div th:if="${paramForFindIdPhone.verificationCodeMismatch != null}">
+                <div th:if="${paramForFindIdPhone.members != null and paramForFindIdPhone.verificationCodeMismatch != true}" class="mt-3"
+                     style="margin-left: 30%; margin-right: 30%; overflow: hidden;">
                     <!-- 마진과 디스플레이로 간격을 조정해놈  -->
                     <div class="alert alert-success text-center">
                         <p style="display: inline-block; vertical-align: top; margin-bottom: 5px;margin-left:-10%;">찾은
@@ -110,11 +110,11 @@
                     <!-- 휴대전화 인증번호  결과가 있을때에만 보여줌 -->
                     <!-- 인증 코드 불일치한 경우 -->
                     <!-- 스타일써서 에러메시지 스타일 조정해놈-->
-                    <div th:if="${paramForFindId.errorMessage}" class="mt-4">
+                    <div th:if="${paramForFindIdPhone.errorMessage}" class="mt-4">
                         <div class="row mt-3">
                             <p class="alert alert-danger"
                                style="background:white;border: none; text-align:center; color: black; width: 41%;margin-left: auto;margin-right: auto;"
-                               th:text="${paramForFindId.errorMessage}"></p>
+                               th:text="${paramForFindIdPhone.errorMessage}"></p>
                         </div>
                     </div>
                 </div>
@@ -122,12 +122,14 @@
         </div>
     </div>
 </section>
-
-<script th:if="${paramForFindId.sendAlert}" th:inline="javascript">
+<script th:if="${paramForFindIdPhone.sendAlert}" th:inline="javascript">
     console.log('스크립트 실행 확인');
 
     // 이메일로 전송되었습니다만 출력
-    alert('인증번호가 이메일로 전송되었습니다.');
+    alert('인증번호가 휴대전화로 전송되었습니다.');
 </script>
 </body>
 </html>
+
+
+

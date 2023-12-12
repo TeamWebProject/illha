@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class MemberCreateForm {
@@ -25,6 +27,13 @@ public class MemberCreateForm {
   @NotEmpty(message = "이메일은 필수항목입니다.")
   @Email
   private String email;
+  // 추가된 부분: 가입일시
+  private LocalDateTime signUpDate;
+
+  @NotEmpty(message = "핸드폰번호 입력은 필수항목입니다.")
+  private String phone;
+
+  private String verificationCode;
 
 
 

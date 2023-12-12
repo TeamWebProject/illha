@@ -1,39 +1,50 @@
 <html layout:decorate="~{layout}" xmlns:layout="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <div layout:fragment="content" class="container my-3">
-    <form th:action="@{/member/login}" method="post">
-        <div th:if="${param.error}">
-            <div class="alert alert-danger">
-                사용자ID 또는 비밀번호를 확인해 주세요.
-            </div>
+<head>
+</head>
+<form th:action="@{/member/login}" method="post">
+    <div th:if="${param.error}">
+        <div class="alert alert-danger">
+            사용자ID 또는 비밀번호를 확인해 주세요.
         </div>
-        <div class="mb-3">
-            <label for="username" class="form-label">사용자ID</label>
-            <input type="text" name="username" id="username" class="form-control">
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">비밀번호</label>
-            <input type="password" name="password" id="password" class="form-control">
-        </div>
-        <div>
-            <button type="submit" class="btn btn-primary" style="display: block; margin-bottom: 10px;">로그인</button>
-            <!-- 아이디 찾기 버튼 -->
-            <a href="/member/findId" class="find-common-button" style="margin-top: 20px;">아이디 찾기</a>
-            <div style="width: 100%; text-align: center; border-bottom: 1px solid #ccc; line-height: 0.1em; margin: 10px 0;">
-                <span style="background-color: #fff; padding: 0 10px; font-size: 14px; color: #333;">또는</span>
-            </div>
-        </div>
-        <div></div>
-        <div style="display: flex; justify-content:center; align-items: center; margin-top: 50px;">
-            <a href="/oauth2/authorization/google">
-                <img src="/pngwing.com.png" alt="Google Login" style="width: 80px; height: 60px; margin-right: 100px;">
-            </a>
-            <a href="/oauth2/authorization/kakao">
-                <img src="/kakao_login_simple1.png" alt="Kakao Login" style="width: 80px; height: 60px; margin-right: 100px;">
-            </a>
-            <a href="/oauth2/authorization/naver">
-                <img src="/naver_login_button3.png" alt="Naver Login" style="width: 80px; height: 60px; margin-right: 50px;">
-            </a>
-        </div>
-    </form>
+    </div>
+    <div class="mb-3">
+        <label for="username" class="form-label">사용자ID</label>
+        <input type="text" name="username" id="username" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">비밀번호</label>
+        <input type="password" name="password" id="password" class="form-control">
+    </div>
+    <div>
+        <button type="submit" class="btn btn-primary" style="display: block; margin-bottom: 10px;">로그인</button>
+    </div>
+</form>
+
+<!-- 아이디 찾기 버튼 -->
+    <a href="/member/findIdTaTal" class="find-common-button" style="margin-top: 20px;">아이디 찾기</a>
+<div style="display:inline-block;">|</div>
+<a href="/member/findPasswordToTal" class="find-common-button" style="margin-top: 20px;">비밀번호찾기</a>
+<div style="width: 100%; text-align: center; border-bottom: 1px solid #ccc; line-height: 0.1em; margin: 10px 0;">
+    <span style="background-color: #fff; padding: 0 10px; font-size: 14px; color: #333;">또는</span>
+</div>
+<!-- 소셜로그인 부분-->
+    <!-- 사진은 보시다싶이 저렇게 이미지를넣어서 링크화했고, URI는 저렇게 고정으로 가져가야함.
+    디자인은 팀프로젝트 URI이에 맞게 맞춰서 수정하면됨.-->
+<div style="display: flex; justify-content:center; align-items: center; margin-top: 50px;">
+    <a href="/oauth2/authorization/google">
+        <img src="/pngwing.com.png" alt="Google Login" style="width: 80px; height: 60px; margin-right: 100px;">
+    </a>
+    <a href="/oauth2/authorization/kakao">
+        <img src="/kakao_login_simple1.png" alt="Kakao Login"
+             style="width: 80px; height: 60px; margin-right: 100px;">
+    </a>
+    <a href="/oauth2/authorization/naver">
+        <img src="/naver_login_button3.png" alt="Naver Login"
+             style="width: 80px; height: 60px; margin-right: 50px;">
+    </a>
+</div>
+
+
 </div>
 </html>
