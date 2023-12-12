@@ -205,5 +205,38 @@ public class MemberService {
 
     return findIdParam;
   }
+  public FindIdParam getParamForFindIdPhone(String storedVerificationCode, String inputVerification, String phone) {
+
+    List<Member> members = findIdByPhone(phone);
+
+    FindIdParam findIdParam = getParamForSendVerification(storedVerificationCode, phone);
+
+    findIdParam.setSendAlert(false);
+    findIdParam.setVerificationCodeMismatch(false);
+    findIdParam.setMembers(members);
+
+    if(!storedVerificationCode.equals(inputVerification)) {
+      findIdParam.setVerificationCodeMismatch(true);
+      findIdParam.setErrorMessage("인증번호가 불일치합니다..");
+    }
+
+    if(members.isEmpty()) {
+      findIdParam.setErrorMessage("휴대전화번호에 해당하는 회원이 없습니다.");
+      findIdParam.setMembers(null);
+    }
+
+    return findIdParam;
+  }
+  public FindIdParam getParamForSendVerificationPhone(String storedVerificationCode, String phone) {
+
+    FindIdParam findIdParam = getDefaultParam();
+
+    findIdParam.setEmail(phone);
+    findIdParam.setVerificationCode(storedVerificationCode);
+    findIdParam.setVerificationCodeForm(true);
+    findIdParam.setSendAlert(true);
+
+    return findIdParam;
+  }
 
 }

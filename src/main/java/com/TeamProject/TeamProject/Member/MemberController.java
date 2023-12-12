@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,8 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
@@ -66,6 +66,25 @@ public class MemberController {
 
     return "redirect:/";
   }
+
+  @GetMapping("/sendVerificationCodeSign")
+  public ResponseEntity<String> sendVerificationCodeSign(@RequestParam String phoneNumber, HttpSession session) {
+    try {
+      // 휴대폰 인증 성공 시 SMS 전송
+
+      String storedVerificationCode = String.valueOf((int) (Math.random() * 9000) + 1000);
+      emailService.sendVerificationCode(phoneNumber, storedVerificationCode);
+
+      // 생성된 인증 코드는 세션에 저장됩니다
+      session.setAttribute("verificationCodeSMS", storedVerificationCode);
+
+      return ResponseEntity.ok("Verification code sent successfully");
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending verification code");
+    }
+  }
+
 
   @GetMapping("/login")
   private String login(Model model, @RequestParam(defaultValue = "false") boolean modal) {
@@ -122,77 +141,38 @@ public class MemberController {
   }
 
   @GetMapping("/findIdPhone")
-  public String findIdPhone() {
+  public String findIdPhone(Model model) {
+
+    FindIdParam findIdParam1 = memberService.getDefaultParam();
+    model.addAttribute("paramForFindIdPhone", findIdParam1);
     return "find-id-phone";
   }
 
   @PostMapping("/findIdPhone")
-  public String findIdPhone(@RequestParam("verificationCodeSMS") String verificationCodeSMS,
-                            @RequestParam(value = "verificationCodeForm", required = false) boolean verificationCodeFormSMS,
-                            Model model, HttpSession session) {
-    // 세션에서 저장된 전화번호 가져오기
+  public String findIdPhone(@RequestParam("phone") String phone, @RequestParam("inputVerificationCode") String inputVerificationCode, HttpSession session,
+                            Model model) {
+    // 세션에서 저장된 이메일 가져오기
     String userPhone = (String) session.getAttribute("userPhone");
-    String storedVerificationCodeSMS = (String) session.getAttribute("verificationCodeSMS");
-
-
-    List<Member> members = memberService.findIdByPhone(userPhone);
-
-
-    model.addAttribute("verificationCodeMismatchSMS", false);
-    model.addAttribute("verificationCodeFormSMS", verificationCodeFormSMS);
-    model.addAttribute("phone", userPhone);
-
-    if (verificationCodeSMS.equals(storedVerificationCodeSMS)) {
-      model.addAttribute("members", members);
-      model.addAttribute("verificationCodeFormSMS", true);
-    }
-
-    if (!verificationCodeSMS.equals(storedVerificationCodeSMS)) {
-      // 인증 코드 불일치 처리 (예: 에러 메시지 전달)
-      model.addAttribute("verificationCodeMismatchSMS", true);
-      return "find-id-phone";
-    }
-
-    // 찾는 아이디 없을 때
-    if (!members.isEmpty()) {
-      model.addAttribute("members", members);
-    }
-
+    String storedVerificationCode = (String) session.getAttribute("storedVerificationCode");
+    FindIdParam findIdParam1 = memberService.getParamForFindIdPhone(storedVerificationCode,inputVerificationCode,userPhone);
+    model.addAttribute("paramForFindIdPhone", findIdParam1);
 
     return "find-id-phone";
-
-
   }
 
   @PostMapping("/sendVerificationCodeSMS")
-  public String sendVerificationCodeSMS(@RequestParam("phone") String phone, Model model, HttpSession session) {
+  public String sendVerificationCodeSMS(@RequestParam("phone") String phone, @RequestParam(value = "inputVerificationCode", required = false) String inputVerificationCode, Model model, HttpSession session) {
 
-    // 인증 코드 생성 (여기에서는 간단하게 난수로 생성)
-    String verificationCodeSMS = String.valueOf((int) (Math.random() * 9000) + 1000);
+    String storedVerificationCode = String.valueOf((int) (Math.random() * 9000) + 1000);
 
-    System.out.println(verificationCodeSMS);
-    try {
-      List<Member> members = memberService.findIdByPhone(phone);
+    emailService.sendVerificationCode(phone, storedVerificationCode);
+    session.setAttribute("userPhone", phone);
+    session.setAttribute("storedVerificationCode", storedVerificationCode);
 
+    FindIdParam findIdParam1 = memberService.getParamForSendVerificationPhone(storedVerificationCode,phone);
+    // MemberService.FindIdParam findIdParam = memberService.getParamForSendVerification(storedVerificationCode, email);
+    model.addAttribute("paramForFindIdPhone", findIdParam1);
 
-      smsService.sendMessage(phone, verificationCodeSMS);
-
-      // 세션에 이메일과 인증 코드 저장
-      session.setAttribute("userPhone", phone);
-      session.setAttribute("verificationCodeSMS", verificationCodeSMS);
-
-      // 모델에 인증 코드 저장 (후에 확인을 위해)
-      model.addAttribute("verificationCodeSMS", verificationCodeSMS);
-      model.addAttribute("phone", phone);
-      model.addAttribute("members", members);
-      // 인증 코드 입력 폼을 보여주기 위해 "verificationCodeForm" 속성 추가
-      model.addAttribute("verificationCodeFormSMS", true);
-
-
-    } catch (DataNotFoundException e) {
-      model.addAttribute("notFound1", true);
-      model.addAttribute("errorMessage1", "휴대전화번호에 일치하는 아이디가 없습니다.");
-    }
     // 휴대전화 입력 폼으로 리다이렉트
     return "find-id-phone";
   }

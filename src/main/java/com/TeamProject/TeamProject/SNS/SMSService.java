@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.Random;
 
 @Service
 public class SMSService {
@@ -27,6 +28,17 @@ public class SMSService {
     } catch (CoolsmsException e) {
       e.printStackTrace();
     }
+  }
+
+  public String createRandomNumber() {
+    Random rand = new Random();
+    String randomNum = "";
+    for (int i = 0; i < 4; i++) {
+      String random = Integer.toString(rand.nextInt(10));
+      randomNum += random;
+    }
+
+    return randomNum;
   }
 
 }

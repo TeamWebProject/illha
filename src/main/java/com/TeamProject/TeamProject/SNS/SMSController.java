@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 @Controller
 @RequiredArgsConstructor
@@ -17,23 +16,14 @@ public class SMSController {
 
   private final SMSService smsService;
 
-  public String createRandomNumber() {
-    Random rand = new Random();
-    String randomNum = "";
-    for (int i = 0; i < 4; i++) {
-      String random = Integer.toString(rand.nextInt(10));
-      randomNum += random;
-    }
 
-    return randomNum;
-  }
 
   //클라이언트가 휴대전화 번호(phoneNumber)를 파라미터로 전달하면, createRandomNumber() 메서드를 통해 랜덤한 인증 코드를 생성하고, SMS 서비스(smsService)를 통해 해당 번호로 메시지를 전송합니다.
 
 
   @GetMapping("/send")
   public String send(@RequestParam String phoneNumber, HttpSession session) {
-    String verificationCodeSMS = createRandomNumber();
+    String verificationCodeSMS = smsService.createRandomNumber();
     smsService.sendMessage(phoneNumber, verificationCodeSMS);
     //생성된 인증 코드는 세션에 저장됩니다
     session.setAttribute("verificationCodeSMS", verificationCodeSMS);

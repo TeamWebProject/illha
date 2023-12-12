@@ -10,6 +10,7 @@ import java.util.List;
 public class FindIdParam {
   private String verificationCode;
   private String email;
+  private String phone;
   private Boolean verificationCodeForm;
   private Boolean verificationCodeMismatch;
   private Boolean sendAlert;

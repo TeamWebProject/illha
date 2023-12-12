@@ -32,10 +32,30 @@
                     <input type="text" th:field="*{phone}" class="form-control" placeholder="핸드폰 번호 입력" required>
                     <button type="button" onclick="requestVerificationCode()">인증요청</button>
                 </div>
-
                 <button class="btn btn-dark w-100 py-2" style="margin-top: 20px;" type="submit">Sign in</button>
             </form>
+
         </div>
     </div>
 </div>
+<script>
+    function requestVerificationCode() {
+       var phoneNumber = document.getElementById("phoneInput").value;
+
+       $.ajax({
+           url: '/sendVerificationCodeSign',
+           type: 'GET',
+           data: { phoneNumber: phoneNumber },
+           success: function(response) {
+               console.log(response);
+               alert(response);
+           },
+           error: function(error) {
+               console.error('Error sending verification code');
+               alert('Error sending verification code');
+           }
+       });
+   }
+</script>
 </html>
+

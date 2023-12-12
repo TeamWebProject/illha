@@ -33,6 +33,8 @@ public class MemberCreateForm {
   @NotEmpty(message = "핸드폰번호 입력은 필수항목입니다.")
   private String phone;
 
+  private String verificationCode;
+
 
 
 
